@@ -1,0 +1,31 @@
+{
+  "name": "smt/phackage-builder",
+  "description": "Build cli-php files into phar-package with optional parameters.",
+  "author": {
+    "Kirill Saksin": "kirillsaksin@yandex.ru"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/saksmt/phackage-builder",
+  "keywords": [
+    "phar",
+    "cli"
+  ],
+  "require": {
+    "php": ">=5.4",
+    "symfony/console": "~2",
+    "smt/symfony-console-styles": "~1"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~4.7"
+  },
+  "autoload": {
+    "psr-4": {
+      "Smt\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Smt\\Test\\": "test/"
+    }
+  }
+}
