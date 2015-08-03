@@ -3,6 +3,11 @@ Phackage-builder
 
 Collects php files and builds them into phar-package.
 
+Install
+=======
+
+`composer require smt/phackage-builder`
+
 Usage
 =====
 
