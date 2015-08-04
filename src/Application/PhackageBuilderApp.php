@@ -5,7 +5,7 @@ namespace Smt\Application;
 use Smt\Command\PackCommand;
 use Symfony\Component\Console\Application as BaseApp;
 
-class Application extends BaseApp
+class PhackageBuilderApp extends BaseApp
 {
     const VERSION = '0.0.0';
 

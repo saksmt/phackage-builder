@@ -1,8 +1,8 @@
 <?php
 
-use Smt\Application\Application;
+use Smt\Application\PhackageBuilderApp;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$app = new Application();
+$app = new PhackageBuilderApp();
 $app->run();
