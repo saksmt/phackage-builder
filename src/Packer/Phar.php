@@ -1,25 +1,31 @@
 <?php
 
-namespace Smt\Packer;
+namespace Smt\PhackageBuilder\Packer;
 
 use Smt\Component\Console\Style\ImprovedStyleInterface;
 use Smt\Component\Console\Style\StubStyle;
 
+/**
+ * Represents phar package
+ * @package Smt\PhackageBuilder\Packer
+ * @author Kirill Saksin <kirillsaksin@yandex.ru>
+ * @api
+ */
 class Phar extends \Phar
 {
 
     /**
-     * @var string
+     * @var string Temp file path
      */
     private $file;
 
     /**
-     * @var string
+     * @var string Path to package
      */
     private $path;
 
     /**
-     * @var string[]
+     * @var string[] List of filters
      */
     private $filterMap = [
         '!/vendor',
@@ -27,44 +33,46 @@ class Phar extends \Phar
     ];
 
     /**
-     * @var string
+     * @var string Bootstrap code
      */
     private $bootstrapCode = '';
 
     /**
-     * @var string[][]
+     * @var string[][] Chain of parsed filters
      */
     private $filterChain;
 
     /**
-     * @var string
+     * @var string Path to directory with sources
      */
     private $sourcesDir;
 
     /**
-     * @var callable[]
+     * @var callable[] List of user-defined filter callbacks
      */
     private $customFilters = [];
 
     /**
-     * @var string
+     * @var string Path to bootstrap file
      */
     private $bootstrapFile;
 
     /**
-     * @var int
+     * @var int Compression level
      */
     private $compression = self::GZ;
 
     /**
-     * @var ImprovedStyleInterface
+     * @var ImprovedStyleInterface Output
      */
     private $output;
 
     /**
+     * Constructor
      * @param string $directory Files to pack
      * @param string $name Target phar name
      * @param string $bootstrapFile Base file
+     * @api
      */
     public function __construct($directory, $name, $bootstrapFile = 'bootstrap.php')
     {
@@ -82,8 +90,10 @@ class Phar extends \Phar
     }
 
     /**
-     * @param ImprovedStyleInterface $out
-     * @return $this
+     * Set output
+     * @param ImprovedStyleInterface $out Output
+     * @return Phar This instance
+     * @api
      */
     public function setOutput(ImprovedStyleInterface $out)
     {
@@ -93,8 +103,9 @@ class Phar extends \Phar
 
     /**
      * Set filter map
-     * @param array $map
-     * @return $this
+     * @param array $map Filter map
+     * @return Phar This instance
+     * @api
      */
     public function setFilterMap(array $map)
     {
@@ -104,16 +115,21 @@ class Phar extends \Phar
 
     /**
      * Add file name filter
-     * @param string $filterString
+     * @param string $filterString Filter
+     * @return Phar This instance
+     * @api
      */
     public function addFilter($filterString)
     {
         $this->filterMap[] = $filterString;
+        return $this;
     }
 
     /**
-     * @param int $compression
-     * @return $this
+     * Set compression
+     * @param int $compression Compression
+     * @return Phar This instance
+     * @api
      */
     public function setCompression($compression)
     {
@@ -123,7 +139,8 @@ class Phar extends \Phar
 
     /**
      * Prepare for packing
-     * @return $this
+     * @return Phar This instance
+     * @api
      */
     public function prepare()
     {
@@ -133,14 +150,16 @@ class Phar extends \Phar
 
     /**
      * Pack the phar
-     * @param bool $useRelativePaths
-     * @return $this
+     * @param bool $useRelativePaths Whether to use relative paths inside of package
+     * @return Phar This instance
+     * @api
      */
     public function pack($useRelativePaths = true)
     {
         $this->output->info(sprintf('Creating package from "%s"', $this->sourcesDir));
         $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->sourcesDir));
-        $log = function () {};
+        $log = function () {
+        };
         if ($this->output->isVerbose()) {
             $log = function (\SplFileInfo $file) {
                 $this->output->info(sprintf('Adding "%s/%s"...', $file->getPath(), $file->getFilename()));
@@ -151,8 +170,9 @@ class Phar extends \Phar
             if (!$file->isDir() && $this->filterPass($file)) {
                 $log($file);
                 if ($useRelativePaths) {
-                    $this->addFile($file->getPath() . '/' . $file->getFilename(),
-                        substr($file->getPath(), $this->stripPath) . $file->getFilename()
+                    $this->addFile(
+                        $file->getPath() . '/' . $file->getFilename(),
+                        substr($file->getPath(), $this->stripPath) . '/' . $file->getFilename()
                     );
                 } else {
                     $this->addFile($file->getPath() . '/' . $file->getFilename());
@@ -168,8 +188,9 @@ class Phar extends \Phar
 
     /**
      * Add custom callable filter
-     * @param callable $filter
-     * @return $this
+     * @param callable $filter Callable filter
+     * @return Phar This instance
+     * @api
      */
     public function addCustomFilter(callable $filter)
     {
@@ -179,8 +200,9 @@ class Phar extends \Phar
 
     /**
      * Add code to execute on startup
-     * @param string $data
-     * @return $this
+     * @param string $data Code
+     * @return Phar This instance
+     * @api
      */
     public function addBootstrapData($data)
     {
@@ -188,6 +210,16 @@ class Phar extends \Phar
         return $this;
     }
 
+    /** {@inheritdoc} */
+    public function __destruct()
+    {
+        @unlink($this->file);
+        parent::__destruct();
+    }
+
+    /**
+     * Build filter map
+     */
     protected function buildMap()
     {
         $this->filterChain = [
@@ -203,14 +235,25 @@ class Phar extends \Phar
         }
     }
 
+    /**
+     * Converts filter rule to regex
+     * @param string $rule Filter rule
+     * @return string Regex
+     */
     protected function prepareFilterRule($rule)
     {
         return '/' . str_replace('/', '\\/', $rule) . '/';
     }
 
+    /**
+     * Check if file passes over filters
+     * @param \SplFileInfo $file File
+     * @return bool True if file passed, false otherwise
+     */
     private function filterPass(\SplFileInfo $file)
     {
-        $log = function () {};
+        $log = function () {
+        };
         if ($this->output->isVeryVerbose()) {
             $log = function ($rule) use ($file) {
                 $this->output->info(sprintf('"%s/%s" filtered out by "%s" rule', $file->getPath(), $file->getFilename(), $rule));
@@ -236,12 +279,9 @@ class Phar extends \Phar
         return true;
     }
 
-    public function __destruct()
-    {
-        @unlink($this->file);
-        parent::__destruct();
-    }
-
+    /**
+     * Builds loader files
+     */
     private function createLoader()
     {
         $this->output->info('Writing bootstrap code...');

@@ -1,12 +1,45 @@
 <?php
 
-namespace Smt\Generator\Util;
+namespace Smt\PhackageBuilder\Generator\Util;
 
-use Smt\Generator\Exception\BadNameException;
+use Smt\PhackageBuilder\Generator\Exception\BadNameException;
 
+/**
+ * Utility class for generation valid names
+ * @author Kirill Saksin <kirillsaksin@yandex.ru>
+ * @package Smt\PhackageBuilder\Generator\Util
+ */
 class NameValidator
 {
+
     /**
+     * Validate|Generate names in camelCase
+     * @param string $name Original name
+     * @return string Valid camelCase name
+     * @throws BadNameException
+     */
+    public static function validateCamelCase($name)
+    {
+        return self::baseValidator($name, function ($name, $namePart) {
+            return $name . ucfirst($namePart);
+        });
+    }
+
+    /**
+     * Validate|Generate names in underscore
+     * @param string $name Original name
+     * @return string Valid underscore name
+     * @throws BadNameException
+     */
+    public static function validateUnderscore($name)
+    {
+        return self::baseValidator($name, function ($name, $namePart) {
+            return $name . '_' . $namePart;
+        });
+    }
+
+    /**
+     * Base validator|generator
      * @param string $name
      * @return string
      * @throws BadNameException
@@ -22,19 +55,5 @@ class NameValidator
             $name = $generationStrategy($name, $namePart);
         }
         return $name;
-    }
-
-    public static function validateCamelCase($name)
-    {
-        return self::baseValidator($name, function ($name, $namePart) {
-            return $name . ucfirst($namePart);
-        });
-    }
-
-    public static function validateUnderscore($name)
-    {
-        return self::baseValidator($name, function ($name, $namePart) {
-            return $name . '_' . $namePart;
-        });
     }
 }

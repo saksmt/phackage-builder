@@ -1,20 +1,49 @@
 <?php
 
-namespace Smt\Generator;
+namespace Smt\PhackageBuilder\Generator;
 
+/**
+ * Creates define code for specified parameters
+ * @package Smt\PhackageBuilder\Generator
+ * @author Kirill Saksin <kirill.saksin@yandex.ru>
+ * @api
+ */
 class DefineGenerator
 {
+    /**
+     * @const string Constant
+     */
     const CONSTANT = 'const';
+
+    /**
+     * @const string Static property
+     */
     const STATIC_PROPERTY = 'static';
+
+    /**
+     * @const string Class member property
+     */
     const MEMBER_PROPERTY = 'member';
+
+    /**
+     * @var string[] Separator map
+     */
     private static $separatorMap = [
         self::CONSTANT => '.',
         self::STATIC_PROPERTY => '::',
         self::MEMBER_PROPERTY => '->',
     ];
 
+    /**
+     * @var string Generated code
+     */
     private $code = '';
 
+    /**
+     * Constructor
+     * @param array $parameters Parameters
+     * @api
+     */
     public function __construct(array $parameters)
     {
         $classData = [];
@@ -47,11 +76,30 @@ class DefineGenerator
         $this->buildClasses($classData);
     }
 
+    /**
+     * Get code
+     * @return string Code
+     * @api
+     */
+    public function getCode()
+    {
+        return $this->code;
+    }
+
+    /**
+     * Generate define expression
+     * @param string $key Define name
+     * @param string $value Define value
+     */
     private function generateDefine($key, $value)
     {
         $this->code .= sprintf('const %s = \'%s\';', $key, $value) . PHP_EOL;
     }
 
+    /**
+     * Build classes code based on preparsed data
+     * @param array $classData Class data
+     */
     private function buildClasses(array $classData)
     {
         foreach ($classData as $classPath => $classDefinition) {
@@ -65,7 +113,14 @@ class DefineGenerator
         }
     }
 
-    private function buildClass($className, $namespace, $classDefinition)
+    /**
+     * Build class code
+     * @param string $className Class name
+     * @param string $namespace Class namespace name
+     * @param array $classDefinition Definition of class
+     * @throws Exception\NonScalarConstantException
+     */
+    private function buildClass($className, $namespace, array $classDefinition)
     {
         $class = (new ClassBuilder($className))->setNamespace($namespace);
         if (isset($classDefinition[self::CONSTANT])) {
@@ -97,13 +152,5 @@ class DefineGenerator
 
         }
         $this->code .= $class->getCode() . PHP_EOL;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCode()
-    {
-        return $this->code;
     }
 }

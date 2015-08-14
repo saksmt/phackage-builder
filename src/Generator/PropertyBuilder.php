@@ -1,17 +1,25 @@
 <?php
 
-namespace Smt\Generator;
+namespace Smt\PhackageBuilder\Generator;
 
-class PropertyBuilder extends ClassPartBuilder
+/**
+ * Property builder
+ * @package Smt\PhackageBuilder\Generator
+ * @author Kirill Saksin <kirill.saksin@yandex.ru>
+ * @api
+ */
+class PropertyBuilder extends AbstractClassPartBuilder
 {
     /**
-     * @var string
+     * @var string Property value
      */
     private $value;
 
     /**
-     * @param string $value
-     * @return $this
+     * Set initial property value
+     * @param string $value Property value
+     * @return PropertyBuilder This instance
+     * @api
      */
     public function setValue($value)
     {
@@ -22,12 +30,11 @@ class PropertyBuilder extends ClassPartBuilder
         return $this;
     }
 
-    /**
-     * @return string
-     */
+    /** {@inheritdoc} */
     public function build()
     {
-        $code = sprintf('%s%s%s$%s',
+        $code = sprintf(
+            '%s%s%s$%s',
             $this->getIndentation(),
             $this->getAccess(),
             $this->getStaticString(),

@@ -1,18 +1,24 @@
 <?php
 
-namespace Smt\Generator;
+namespace Smt\PhackageBuilder\Generator;
 
-use Smt\Generator\Util\NameValidator;
+use Smt\PhackageBuilder\Generator\Util\NameValidator;
 
-class MethodBuilder extends ClassPartBuilder
+/**
+ * Method builder
+ * @package Smt\PhackageBuilder\Generator
+ * @author Kirill Saksin <kirillsaksin@yandex.ru>
+ * @api
+ */
+class MethodBuilder extends AbstractClassPartBuilder
 {
     /**
-     * @var array
+     * @var array Arguments of method
      */
     private $arguments = [];
 
     /**
-     * @var string
+     * @var string Return valude of method
      */
     private $returnValue = null;
 
@@ -21,6 +27,10 @@ class MethodBuilder extends ClassPartBuilder
      */
     private $abstract = false;
 
+    /**
+     * {@inheritdoc}
+     * @api
+     */
     public function __construct($name)
     {
         $isMagic = substr($name, 0, 2) == '__';
@@ -32,13 +42,15 @@ class MethodBuilder extends ClassPartBuilder
     }
 
     /**
-     * @param string $name
-     * @param string|null $default
-     * @return $this
+     * Add method argument
+     * @param string $name Argument name
+     * @param string|null $default Argument default value
+     * @return MethodBuilder This instance
+     * @api
      */
     public function addArgument($name, $default = null)
     {
-        $this->arguments[] = (object)[
+        $this->arguments[] = (object) [
             'name' => $name,
             'default' => $default,
         ];
@@ -46,8 +58,10 @@ class MethodBuilder extends ClassPartBuilder
     }
 
     /**
-     * @param string $value
-     * @return $this
+     * Set return value for method
+     * @param string $value Return value
+     * @return MethodBuilder This instance
+     * @api
      */
     public function setReturnValue($value)
     {
@@ -56,7 +70,9 @@ class MethodBuilder extends ClassPartBuilder
     }
 
     /**
-     * @return $this
+     * Make method abstract
+     * @return MethodBuilder This instance
+     * @api
      */
     public function makeAbstract()
     {
@@ -64,12 +80,11 @@ class MethodBuilder extends ClassPartBuilder
         return $this;
     }
 
-    /**
-     * @return string
-     */
+    /** {@inheritdoc} */
     public function build()
     {
-        $prefix = sprintf('%s%s%s%sfunction %s(%s)',
+        $prefix = sprintf(
+            '%s%s%s%sfunction %s(%s)',
             $this->getIndentation(),
             $this->getAbstractString(),
             $this->getAccess(),
@@ -82,13 +97,23 @@ class MethodBuilder extends ClassPartBuilder
         } else {
             return $prefix . PHP_EOL .
                 $this->getIndentation() . '{' . PHP_EOL . $this->getIndentation(2) .
-                sprintf('return %s;', $this->returnValue) . PHP_EOL .
+                $this->getReturnString() . PHP_EOL .
                 $this->getIndentation() . '}' . PHP_EOL . PHP_EOL;
         }
     }
 
     /**
-     * @return string
+     * Check if method is abstract
+     * @return bool True if method is abstract, false otherwise
+     */
+    public function isAbstract()
+    {
+        return $this->abstract;
+    }
+
+    /**
+     * Get modifier for abstract
+     * @return string String with abstract modifier
      */
     private function getAbstractString()
     {
@@ -96,7 +121,8 @@ class MethodBuilder extends ClassPartBuilder
     }
 
     /**
-     * @return string
+     * Get string with arguments definition
+     * @return string Method arguments definition
      * @throws Exception\BadNameException
      */
     private function getArgumentString()
@@ -118,10 +144,14 @@ class MethodBuilder extends ClassPartBuilder
     }
 
     /**
-     * @return bool
+     * Get string with return definition
+     * @return string Return definition
      */
-    public function isAbstract()
+    private function getReturnString()
     {
-        return $this->abstract;
+        if (isset($this->returnValue)) {
+            return sprintf('return %s;', $this->returnValue);
+        }
+        return '';
     }
 }

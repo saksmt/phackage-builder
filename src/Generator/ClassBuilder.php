@@ -1,48 +1,72 @@
 <?php
 
-namespace Smt\Generator;
+namespace Smt\PhackageBuilder\Generator;
 
-use Smt\Generator\Exception\NonScalarConstantException;
-use Smt\Generator\Util\NameValidator;
+use Generator\Exception\ClassGenerationException;
+use Smt\PhackageBuilder\Generator\Exception\NonScalarConstantException;
+use Smt\PhackageBuilder\Generator\Util\NameValidator;
 
+/**
+ * Creates code for PHP class
+ * @package Smt\PhackageBuilder\Generator
+ * @api
+ */
 class ClassBuilder
 {
+    /**
+     * @const string Private access modifier
+     */
     const ACCESS_PRIVATE = 'private';
+
+    /**
+     * @const string Protected access modifier
+     */
     const ACCESS_PROTECTED = 'protected';
+
+    /**
+     * @const string Public access modifier
+     */
     const ACCESS_PUBLIC = 'public';
 
     /**
-     * @var string
+     * @var string Class name
      */
     private $name;
 
     /**
-     * @var MethodBuilder
+     * @var MethodBuilder[] Class methods
      */
     private $methods = [];
 
     /**
-     * @var PropertyBuilder
+     * @var PropertyBuilder[] Class properties
      */
     private $properties = [];
 
     /**
-     * @var string[]
+     * @var string[] Class constants
      */
     private $constants = [];
 
     /**
-     * @var bool
+     * @var bool Is class abstract
      */
     private $abstract = false;
 
     /**
-     * @var string|null
+     * @var string|null Class namespace
      */
     private $namespace;
 
     /**
-     * @param string $className
+     * @var bool Is class final
+     */
+    private $final;
+
+    /**
+     * Constructor
+     * @param string $className Class name
+     * @api
      */
     public function __construct($className)
     {
@@ -50,17 +74,38 @@ class ClassBuilder
     }
 
     /**
-     * @param string $name
-     * @return $this
+     * Set class final or not
+     * @param bool $final Is class final
+     * @return ClassBuilder This instance
+     * @api
      */
-    public static function createEnumeration($name)
+    public function setFinal($final = true)
     {
-        return (new self($name))->forceAbstract();
+        $this->final = $final;
+        return $this;
     }
 
     /**
-     * @param string $name
-     * @return MethodBuilder
+     * Factory method to create enumeration
+     * @param string $name Enumeration name
+     * @return ClassBuilder
+     * @api
+     */
+    public static function createEnumeration($name)
+    {
+        return (new self($name))
+            ->setFinal()
+            ->addConstructor()
+                ->makePrivate()
+            ->end()
+        ;
+    }
+
+    /**
+     * Add method to class
+     * @param string $name Method name
+     * @return MethodBuilder Method builder
+     * @api
      */
     public function addMethod($name)
     {
@@ -71,7 +116,9 @@ class ClassBuilder
     }
 
     /**
-     * @return MethodBuilder
+     * Add constructor
+     * @return MethodBuilder Method builder
+     * @api
      */
     public function addConstructor()
     {
@@ -79,8 +126,10 @@ class ClassBuilder
     }
 
     /**
-     * @param string $namespace
-     * @return $this
+     * Set namespace for class
+     * @param string $namespace Namespace name
+     * @return ClassBuilder This instance
+     * @api
      */
     public function setNamespace($namespace)
     {
@@ -89,8 +138,10 @@ class ClassBuilder
     }
 
     /**
-     * @param string $name
-     * @return PropertyBuilder
+     * Add property to class
+     * @param string $name Property name
+     * @return PropertyBuilder Property builder
+     * @api
      */
     public function addProperty($name)
     {
@@ -101,10 +152,12 @@ class ClassBuilder
     }
 
     /**
-     * @param string $name
-     * @param string $value
-     * @return $this
+     * Add constant to class
+     * @param string $name Constant name
+     * @param string $value Constant value
+     * @return ClassBuilder This instance
      * @throws NonScalarConstantException
+     * @api
      */
     public function addConstant($name, $value)
     {
@@ -119,7 +172,9 @@ class ClassBuilder
     }
 
     /**
-     * @return $this
+     * Force class to be abstract
+     * @return ClassBuilder This instance
+     * @api
      */
     public function forceAbstract()
     {
@@ -128,16 +183,20 @@ class ClassBuilder
     }
 
     /**
-     * @return string
-     * @throws Exception\BadNameException
+     * Get built code
+     * @return string Generated code
+     * @throws ClassGenerationException
+     * @api
      */
     public function getCode()
     {
-        $code = sprintf('class %s',
+        $code = sprintf(
+            'class %s',
             $this->name
         ) . PHP_EOL . $this->getIndentation() . '{' . PHP_EOL;
         foreach ($this->constants as $name => $value) {
-            $code .= $this->getIndentation(1) . sprintf('const %s = %s;',
+            $code .= $this->getIndentation(1) . sprintf(
+                'const %s = %s;',
                 $name,
                 $value
             ) . PHP_EOL;
@@ -154,9 +213,7 @@ class ClassBuilder
             $code .= $method->build();
         }
         $code .= PHP_EOL . $this->getIndentation() . '}';
-        if ($this->abstract) {
-            $code = 'abstract ' . $code;
-        }
+        $code = $this->setModifiers($code);
         $code = $this->getIndentation() . $code;
         $namespace = $this->namespace;
         if (!isset($namespace)) {
@@ -165,13 +222,43 @@ class ClassBuilder
         return 'namespace ' . $namespace . PHP_EOL . '{' . PHP_EOL . $code . PHP_EOL . '}' . PHP_EOL;
     }
 
+    /**
+     * Check if class has namespace
+     * @return bool True if namespace is set, false otherwise
+     * @api
+     */
     public function hasNamespace()
     {
         return isset($this->namespace);
     }
 
+    /**
+     * Generate indentation string
+     * @param int $level Block nesting level
+     * @return string Indentation
+     */
     private function getIndentation($level = 0)
     {
         return str_repeat(' ', 4 * ($level + $this->hasNamespace()));
+    }
+
+    /**
+     * @param string $code Already generated code
+     * @return string Class with modifiers
+     * @throws ClassGenerationException
+     */
+    private function setModifiers($code)
+    {
+        if ($this->abstract && $this->final) {
+            throw new ClassGenerationException('Class can\'t be both abstract and final!');
+        }
+        if ($this->abstract) {
+            $code = 'abstract ' . $code;
+        }
+        if ($this->final) {
+            $code = 'final ' . $code;
+            return $code;
+        }
+        return $code;
     }
 }

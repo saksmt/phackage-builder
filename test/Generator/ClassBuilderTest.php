@@ -2,10 +2,17 @@
 
 namespace Generator;
 
-use Smt\Generator\ClassBuilder;
+use Smt\PhackageBuilder\Generator\ClassBuilder;
 
+/**
+ * Class builder test
+ * @package Generator
+ */
 class ClassBuilderTest extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * @test
+     */
     public function test()
     {
         $class = (new ClassBuilder('test'))
