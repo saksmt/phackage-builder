@@ -1,12 +1,12 @@
 <?php
 
-namespace Generator;
+namespace Smt\PhackageBuilder\Test\Generator;
 
 use Smt\PhackageBuilder\Generator\ClassBuilder;
 
 /**
  * Class builder test
- * @package Generator
+ * @package Smt\PhackageBuilder\Test\Generator
  */
 class ClassBuilderTest extends \PHPUnit_Framework_TestCase
 {

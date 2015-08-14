@@ -182,6 +182,8 @@ class Phar extends \Phar
         $this->createLoader();
         $this->output->info('Saving...');
         copy($this->file, $this->path);
+        $this->output->info('Setting up execution flags...');
+        chmod($this->path, 0755);
         $this->output->success('Done!');
         return $this;
     }

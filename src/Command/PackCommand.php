@@ -29,7 +29,7 @@ class PackCommand extends Command
             ->addArgument('path-to-package', InputArgument::REQUIRED, 'Path to directory of package')
             ->addOption('name', 'N', InputOption::VALUE_REQUIRED, 'Name of package', 'package.phar')
             ->addOption('define', 'd', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Provide define for package', [])
-            ->addOption('ignore', 'I', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Set ignore of some files/dirs')
+            ->addOption('filter', 'F', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Set filters')
         ;
     }
 
@@ -50,8 +50,8 @@ class PackCommand extends Command
                 ->newLine()
             ;
         }
-        if ($in->hasOption('ignore')) {
-            $package->setFilterMap($in->getOption('ignore'));
+        if ($in->hasOption('filter')) {
+            $package->setFilterMap($in->getOption('filter'));
         }
         $package
             ->setOutput(new GentooStyle($out, $in))

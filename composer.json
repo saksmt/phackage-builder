@@ -20,7 +20,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Smt\\": "src/"
+      "Smt\\PhackageBuilder\\": "src/"
     }
   },
   "autoload-dev": {
