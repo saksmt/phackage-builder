@@ -28,7 +28,9 @@
       "Smt\\Test\\": "test/"
     }
   },
-  "phackage": {
-    "bootstrap-file": "bootstrap.php"
+  "extra": {
+    "phackage": {
+      "bootstrap-file": "bootstrap.php"
+    }
   }
 }
